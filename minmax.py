@@ -117,13 +117,27 @@ class board:
 	
 		color=cell[i][j].color
 		rang=[]					
+		for (x,y) in self.force(color,cell):
+			if cell[x][y].rank==1:
+				kx=x
+				ky=y
+				
+				break
+					
+		#if not self.safe(kx,ky,cell,color) and not cell[i][j].rank==1:
+		#	print 'check'
+		#	return rang			
+				
+		
 		if cell[i][j].rank==1:
 			
 			for (d1,d2) in ((-1,-1),(1,-1),(-1,1),(1,1),(0,1),(1,0),(0,-1),(-1,0)):
 				if self.inside(i+d1,j+d2):	
 					if (cell[i+d1][j+d2]==None or not cell[i+d1][j+d2].color==color) and self.safe(i+d1,j+d2,cell,color):
-						rang.append((i+d1,j+d2))					
-		if cell[i][j].rank==2:
+						rang.append((i+d1,j+d2))
+			
+								
+		elif cell[i][j].rank==2:
 			for (d1,d2) in ((0,1),(1,1),(1,0),(0,-1),(-1,-1),(-1,0),(-1,1),(1,-1)):
 				
 				x=i
@@ -143,7 +157,7 @@ class board:
 							
 						
 		
-		if cell[i][j].rank==3:
+		elif cell[i][j].rank==3:
 		
 			for (d1,d2) in ((1,1),(-1,-1),(-1,1),(1,-1)):
 				
@@ -161,15 +175,18 @@ class board:
 						if not cell[x][y].color==color:
 							rang.append((x,y))
 						break
+		
+		
 			
-		if cell[i][j].rank==4:
+		elif cell[i][j].rank==4:
 			for (d1,d2) in ((2,1),(-2,-1),(2,-1),(-2,1),(1,2),(-1,-2),(-1,2),(1,-2)):
 				if self.inside(i+d1,j+d2):	
 					if cell[i+d1][j+d2]==None:
 						rang.append((i+d1,j+d2))
 					elif not cell[i+d1][j+d2].color==color:
 						rang.append((i+d1,j+d2))
-		if cell[i][j].rank==5:
+
+		elif cell[i][j].rank==5:
 			for (d1,d2) in ((0,1),(1,0),(0,-1),(-1,0)):
 				
 				x=i
@@ -186,7 +203,7 @@ class board:
 						if not cell[x][y].color==color:
 							rang.append((x,y))
 						break
-		if cell[i][j].rank==6:
+		elif cell[i][j].rank==6:
 			if self.inside(i+cell[i][j].color,j):
 				if cell[i+cell[i][j].color][j]==None:
 					rang.append((i+cell[i][j].color,j))
@@ -198,7 +215,18 @@ class board:
 				rang.append((i+cell[i][j].color,j+1))
 			if self.inside(i+cell[i][j].color,j-1) and not cell[i+cell[i][j].color][j-1]==None and not cell[i+cell[i][j].color][j-1].color==color:
 				rang.append((i+cell[i][j].color,j-1))
-		return rang	
+		
+		
+		frang=[]
+		if cell[i][j].rank==1:
+			return rang
+		else:
+			for (x,y) in rang:
+			
+				if self.safe(kx,ky,self.move(self.copy(cell),i,j,x,y),color):
+					frang.append((x,y))
+		
+		return frang	
 	def move(self,cell,i,j,x,y):
 		cell[x][y]=cell[i][j]
 		cell[i][j]=None
@@ -224,7 +252,7 @@ class board:
 	def profit(self,cell,color,pcolor,pforce,oforce,depth):
 		npforce=self.power(pcolor,cell)
 		noforce=self.power(pcolor*-1,cell)
-		
+		checkbenifit=0
 		if depth==0:
 			
 			return (npforce-pforce+oforce-noforce)*100
@@ -245,7 +273,7 @@ class board:
 					for (p,q) in possible:
 						c+=self.profit(self.move(self.copy(cell),x,y,p,q),color*-1,pcolor,npforce,noforce,depth-1)
 					
-					return c+(npforce-pforce+oforce-noforce)*100*depth*100
+					return c+checkbenifit+(npforce-pforce+oforce-noforce)*100*depth*100
 			break
 		
 		
@@ -262,20 +290,21 @@ class board:
 					
 					
 	def checkmate(self,cell,color):
+		possible=0
 		for (x,y) in self.force(color,cell):
 			
 			if cell[x][y].rank==1:
-				
-				if not self.safe(x,y,cell,color):
-					
-					if len(self.coverage(x,y,cell))==0:
-
- 						return True
-		
+				if self.safe(x,y,cell,color):
+					return False
+			possible+=len(self.coverage(x,y,cell))
 	
-	
+		if possible==0:
+			return True
+		else:
+			return False
+			
 	def bestpos(self,cell,color,pcolor,depth):	
-		bestprofit=-99999
+		bestprofit=-999999
 		
 		best=None
 		npforce=self.power(color,cell)
@@ -286,17 +315,9 @@ class board:
 				
 				if not self.safe(x,y,cell,color):
 					
-					if len(self.coverage(x,y,cell))==0:
+					if self.checkmate(cell,color):
 						
 						return None
-						
-					possible=self.coverage(x,y,cell)
-					for (p,q) in possible:
-						c=self.profit(self.move(self.copy(cell),x,y,p,q),color*-1,pcolor,npforce,noforce,depth-1)
-						if c>bestprofit:
-							best=self.move(self.copy(cell),x,y,p,q)
-							bestprofit=c
-					return best
 				break
 				
 		

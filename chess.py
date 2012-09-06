@@ -5,7 +5,7 @@ import sys
 class chessgui:
 	def __init__(self):
 		pygame.init()
-		
+		self.selected=False
 		self.bricksize=80
 		self.chesscanvas=pygame.display.set_mode((self.bricksize*8,self.bricksize*8))
 		
@@ -15,7 +15,7 @@ class chessgui:
 		self.white=1
 		self.pcolor=self.black
 		self.opcolor=self.white
-		
+		self.highlight=(0,0)
 		self.img=[[pygame.image.load("troop/"+i+j+".gif") for j in ("k","q","b","h","f","p")] for i in ("b","w")]
 		print self.img
 		
@@ -30,6 +30,9 @@ class chessgui:
 					pygame.draw.rect(self.chesscanvas, (225,225,225), ((i*self.bricksize,j*self.bricksize),(self.bricksize,self.bricksize)),0)
 				else:
 					pygame.draw.rect(self.chesscanvas, (0,100,225), ((i*self.bricksize,j*self.bricksize),(self.bricksize,self.bricksize)),0)
+					
+		if self.selected:
+			pygame.draw.rect(self.chesscanvas, (40,100,15), ((self.highlight[1]*self.bricksize,self.highlight[0]*self.bricksize),(self.bricksize,self.bricksize)),0)
 		for i in range(8):
 			for j in range(8):
 				if not cell[i][j]==None:
@@ -42,7 +45,7 @@ class chessgui:
 		return (p[1]/self.bricksize,p[0]/self.bricksize)
 			
 	def main(self):
-		selected=False
+		self.selected=False
 		fr=(0,0)
 		to=(0,0)
 		cell=self.board.cell
@@ -52,7 +55,7 @@ class chessgui:
 				if event.type==pygame.QUIT:
 					sys.exit()
 				if event.type==pygame.MOUSEBUTTONDOWN:
-					if selected:
+					if self.selected:
 						to=self.getcell(pygame.mouse.get_pos())	
 						if not fr==to :
 							
@@ -66,12 +69,13 @@ class chessgui:
 									self.board.boardinit()
 								else:
 									self.display(cell)
-							selected=False
+							self.selected=False
 					else:
 						fr=self.getcell(pygame.mouse.get_pos())
 						if not cell[fr[0]][fr[1]]==None and cell[fr[0]][fr[1]].color==self.pcolor:
-							selected=True
-							print fr, 'selected'
+							self.selected=True
+							self.highlight=fr
+							print fr, 'self.selected'
 	
 gui=chessgui()
 gui.main()		
